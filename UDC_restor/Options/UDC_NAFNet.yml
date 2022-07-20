@@ -1,0 +1,179 @@
+# general settings
+name: UDC_NAFNet
+model_type: ImageCleanModel
+scale: 1
+num_gpu: 2  # set num_gpu: 0 for cpu mode
+manual_seed: 100
+
+# dataset and data loader settings
+datasets:
+  train:
+    name: TrainSet
+    type: PairedImgPSFNpyDataset
+    lq_map_type: same
+    gt_map_type: same
+
+    filename_tmpl: '{}'
+    io_backend:
+      type: npy
+    folders:
+      rot_1:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_1/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_1_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_2:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_2/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_2_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_3:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_3/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_3_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_4:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_4/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_4_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_5:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_5/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_5_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_6:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_6/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_6_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_7:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_7/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_7_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_8:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_8/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_8_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+      rot_9:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/ZTE_new_9/train/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_9_train.txt
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/train/
+
+    # data loader
+    use_shuffle: true
+    num_worker_per_gpu: 8
+    batch_size_per_gpu: 16
+
+    ### -------------Progressive training--------------------------
+    mini_batch_sizes: [16, 16, 16, 16, 16]             # Batch size per gpu
+    iters: [92000,64000,48000,36000, 110000]
+    gt_size: 256   # Max patch size for progressive training
+    gt_sizes: [256,256,256,256, 256]  # Patch sizes for progressive training.\
+    use_flip: false
+    use_rot: false
+    ### ------------------------------------------------------------
+
+    ### ------- Training on single fixed-patch size 128x128---------
+    # mini_batch_sizes: [8]   
+    # iters: [300000]
+    # gt_size: 128   
+    # gt_sizes: [128]
+    ### ------------------------------------------------------------
+
+    dataset_enlarge_ratio: 1
+    prefetch_mode: cuda
+    pin_memory: true
+
+  val:
+    name: ValSet
+    type: PairedImgPSFNpyDataset
+    lq_map_type: same
+    gt_map_type: same
+    io_backend:
+      type: npy
+    folders:
+      val:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/val/
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/val/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_val.txt
+
+# network structures
+network_g:
+  type: NAFNetLocal
+  width: 64
+  enc_blk_nums: [1, 1, 1, 28]
+  middle_blk_num: 1
+  dec_blk_nums: [1, 1, 1, 1]
+
+
+# path
+path:
+  pretrain_network_g: ~/song/Restormer-main/experiments/UDC_NAFNet_archived_20220718_185847/models/net_g_344000.pth
+  strict_load_g: true
+  resume_state: ~
+
+# training settings
+train:
+  total_iter: 350000
+  warmup_iter: -1 # no warm up
+  use_grad_clip: false
+
+  # Split 300k iterations into two cycles. 
+  # 1st cycle: fixed 3e-4 LR for 92k iters. 
+  # 2nd cycle: cosine annealing (3e-4 to 1e-6) for 208k iters.
+  scheduler:
+    type: CosineAnnealingRestartCyclicLR
+    periods: [92000, 258000]
+    restart_weights: [1,1]
+    eta_mins: [0.0003,0.000001]
+  
+  mixing_augs:
+    mixup: false
+    mixup_beta: 1.2
+    use_identity: true
+
+  optim_g:
+    type: AdamW
+    lr: !!float 2e-4
+    weight_decay: !!float 1e-4
+    betas: [0.9, 0.999]
+  
+  # losses
+  pixel_opt:
+    type: L1Loss
+    loss_weight: 1
+    reduction: mean
+  perceptual_opt:
+    type: PerceptualLoss
+    layer_weights:
+      'conv5_4': 1  # before relu
+    vgg_type: vgg19
+    use_input_norm: true
+    perceptual_weight: !!float 1e-2
+    style_weight: 0
+    norm_img: false
+    criterion: l1
+
+# validation settings
+val:
+  window_size: 8
+  val_freq: !!float 4e3
+  save_img: false
+  rgb2bgr: true
+  use_image: true
+  max_minibatch: 8
+
+  metrics:
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: false
+
+# logging settings
+logger:
+  print_freq: 1000
+  save_checkpoint_freq: !!float 4e3
+  use_tb_logger: true
+  wandb:
+    project: ~
+    resume_id: ~
+
+# dist training settings
+dist_params:
+  backend: nccl
+  port: 29500

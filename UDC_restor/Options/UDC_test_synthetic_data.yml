@@ -1,0 +1,53 @@
+name: UDC_test_synthetic_data
+suffix: ~  # add suffix to saved images
+model_type: ImageCleanModel
+scale: 1
+crop_border: ~  # crop border when evaluation. If None, crop the scale pixels
+num_gpu: 1
+manual_seed: 100
+
+datasets:
+  test_1:
+    name: syn_val_new
+    type: PairedImgPSFNpyDataset
+    lq_map_type: simple
+    gt_map_type: simple
+    io_backend:
+      type: npy
+    folders:
+      rot_1:
+        dataroot_lq: /home/jtzhou/song/DISCNet/datasets/synthetic_data/input/val/
+        dataroot_gt: /home/jtzhou/song/DISCNet/datasets/synthetic_data/GT/val/
+        meta_info_file: /home/jtzhou/song/DISCNet/datasets/PSF/kernel_info_list/ZTE_new/ZTE_new_code_val.txt
+
+# network structures
+network_g:
+  type: Restormer
+  inp_channels: 3
+  out_channels: 3
+  dim: 48
+  num_blocks: [4,6,6,8]
+  num_refinement_blocks: 4
+  heads: [1,2,4,8]
+  ffn_expansion_factor: 2.66
+  bias: False
+  LayerNorm_type: WithBias
+  dual_pixel_task: False
+
+# validation settings
+val:
+  window_size: 8
+  save_img: true
+  save_npy: true
+  suffix: ~
+  
+  metrics: 
+    psnr: # metric name, can be arbitrary
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: false
+
+# path
+path:
+  pretrain_network_g: /home/jtzhou/song/Restormer-main/experiments/UDC_Restormer/models/net_g_292000.pth
+  strict_load: true

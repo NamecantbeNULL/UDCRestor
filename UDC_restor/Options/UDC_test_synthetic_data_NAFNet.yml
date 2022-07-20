@@ -1,0 +1,47 @@
+name: UDC_test_synthetic_data_NAFNet
+suffix: ~  # add suffix to saved images
+model_type: ImageCleanModel
+scale: 1
+crop_border: ~  # crop border when evaluation. If None, crop the scale pixels
+num_gpu: 1
+manual_seed: 100
+
+datasets:
+  test_1:
+    name: syn_val_new
+    type: PairedImgPSFNpyDataset
+    lq_map_type: same
+    gt_map_type: same
+    io_backend:
+      type: npy
+    folders:
+      rot_1:
+        dataroot_lq: ./dataset/input/test/
+        dataroot_gt: ./dataset/
+        meta_info_file: ./dataset/ZTE_new_code_test.txt
+
+# network structures
+network_g:
+  type: NAFNetLocal
+  width: 64
+  enc_blk_nums: [1, 1, 1, 28]
+  middle_blk_num: 1
+  dec_blk_nums: [1, 1, 1, 1]
+
+# validation settings
+val:
+  window_size: 8
+  save_img: true
+  save_npy: true
+  suffix: ~
+  
+#  metrics:
+#    psnr: # metric name, can be arbitrary
+#      type: calculate_psnr
+#      crop_border: 0
+#      test_y_channel: false
+
+# path
+path:
+  pretrain_network_g: ./checkpoints/net_g_28000.pth
+  strict_load: true
